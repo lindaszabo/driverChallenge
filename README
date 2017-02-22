@@ -1,0 +1,61 @@
+#### Requirements
+
+Python 2.7 (tested with 2.7.10) with Biopython
+
+#### Files
+
+pasteFragments.py: main script
+pasteFragmentsTest.sh: unit test script
+tests/*: each subdirectory contains a fasta input file and expected output file with chromosome sequence all on first line of file.
+   - pasteFragmentsTest.sh calls pasteFragments.py on each of these, comparing results with expected output
+
+
+#### assumptions defined in task (I check that these are true and fail gracefully if these conditions are not met)
+
+1) sequences contain only ACTG 
+2) each sequence is no more than 1000 characters
+3) the full sequence can be reconstructed by gluing together pairs of reads that overlap by more than half their length
+
+#### assumptions defined in task that I do not check
+
+1) input contains at most 50 sequences
+2) there is a unique reconstruction for the sequences in the file 
+
+#### additional assumptions in the implementation
+
+1) there are no sequencing errors or technical artifacts, so overlapped sequences are identical
+2) fragments are sequenced from the same strand, I do not check reverse complement of fragments
+3) fragments can be of different lengths
+4) if a fragment is contained entirely within another fragment, they can be "glued" together if overlap length requirements met
+
+#### pseudocode
+
+for each new fragment in fasta file
+  for each partially processed fragment (fragment read in and possibly extended already with another fragment read)
+    if LHS of new fragment can extend a RHS of partially processed fragment, glue it, break
+    if RHS of new fragment can extend a LHS of partially processed fragment, glue it, break
+    if no extension found then add new fragment to list of partially processed fragments
+    
+select a partially processed fragment i as base of extension
+
+while partially processed fragments exist
+  find partially processed fragment j that extends fragment i to left or right and glue to base of extension
+  remove glued fragment j from partially processed fragments
+
+report sequence of full extension as reconstructed chromosome sequence
+
+#### general approach
+
+As I read in the fragment sequences, I combine it with a fragment already read in (partial fragments) if requirements met (overlap by more than half).
+Since each pair of fragments must overlap by more than half of their sequences, for a partial fragment constructed of more than 1 sequence read from
+the fasta file I store both the glued sequence as well as the number of nucleotides required for a new fragment to overlap (half of the length of the
+left-most fragment that has been glued together to construct the partial fragment and half the length of the right-most fragment).
+If I can't combine the newly read fragment with an existing fragment, I add it to the list of partial fragments.
+
+After all fragments have been read in, I have 1+ partial fragments that need to be glued together to construct the final chromosomal sequence.
+I take 1 of the fragments from the list of partial fragments as a "base fragment" and loop through the other partial fragments to until I find one that
+can extend the base fragment either to the left or right. I remove this from the list (I use a deque for this list to make the random remove efficient),
+glue it to the base fragment, and continue on until all partial fragments have been removed from the list and added on to one of the ends of the growing
+base fragment. 
+
+
