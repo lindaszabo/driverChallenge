@@ -180,10 +180,3 @@ if __name__ == "__main__":
     finally:
         if in_handle:
             in_handle.close()
-# TODO:
-# clean up comments / code
-# implement looping in shell script
-# add comments at beginning of file
-# run flake8
-# write up readme
-# check into github
