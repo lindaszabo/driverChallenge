@@ -32,11 +32,9 @@ class fragObj:
     # return: True if able to paste ext on either side, else False
     def extendWithOverlap(self, ext):
 
-        match = SequenceMatcher(None,
-                                self.frag,
-                                ext.frag).find_longest_match(0,
-                                                             len(self.frag),
-                                                             0, len(ext.frag))
+        match = SequenceMatcher(None, self.frag, ext.frag).find_longest_match(
+            0, len(self.frag), 0, len(ext.frag))
+
         # match.a: start pos of match in self.frag
         # match.b: start pos of match in ext.frag
         # match.size: length of match
@@ -147,6 +145,7 @@ if __name__ == "__main__":
         fasta_sequences = SeqIO.parse(in_handle, "fasta")
 
         for fasta in fasta_sequences:
+            # check a few basic assumptions, report errors to user
             if not patt_DNA.search(str(fasta.seq)):
                 logging.error("INPUT ERROR. Non-DNA sequence: %s", (fasta.seq))
                 sys.exit("INPUT ERROR. Non-DNA sequence: " + fasta.seq)
@@ -155,16 +154,21 @@ if __name__ == "__main__":
                               (args.maxSeqLen))
                 sys.exit("INPUT ERROR. Sequence longer than: " +
                          str(args.maxSeqLen))
-            newFrag = fragObj(str(fasta.seq))
 
-            didExtend = False  # True if extend existing frag with this new one
+            newFrag = fragObj(str(fasta.seq))  # store seq info in obj
+
+            # flag will be updated if able to extend existing frag with new
+            didExtend = False
+
+            # check each prev. fragment to see if we can extend with the new
             for frag in partial_frags:
                 if frag.extendWithOverlap(newFrag):
                     # newFrag was added to an existing fragment
                     didExtend = True
                     break
-            # could not extend existing fragment, add as a new partial fragment
+
             if not didExtend:
+                # could not extend existing frag, add as a new partial fragment
                 partial_frags.append(newFrag)
         in_handle.close()
 
